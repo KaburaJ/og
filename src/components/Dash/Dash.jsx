@@ -170,6 +170,28 @@ const Dash = () => {
                 {/*//app-card*/}
               </div>
               {/*//col*/}
+              <div className="col-6 col-lg-3">
+                <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"#4A99D7"}}>
+                  <div className="app-card-body p-3 p-lg-4">
+                    <h4 className="stats-type mb-1" style={{color:"white"}}>size</h4>
+                    <div className="stats-figure" style={{color:"white"}}>160</div>
+                  </div>
+                  {/*//app-card-body*/}
+                  <a className="app-card-link-mask" href="#" />
+                </div>
+                {/*//app-card*/}
+              </div>
+              <div className="col-6 col-lg-3">
+                <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"#1C4B79"}}>
+                  <div className="app-card-body p-3 p-lg-4">
+                    <h4 className="stats-type mb-1" style={{color:"white"}}>Density</h4>
+                    <div className="stats-figure" style={{color:"white"}}>230</div>
+                  </div>
+                  {/*//app-card-body*/}
+                  <a className="app-card-link-mask" href="#" />
+                </div>
+                {/*//app-card*/}
+              </div>
             </div>
             {/*//row*/}
             <div className="row g-4 mb-4">

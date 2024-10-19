@@ -3,11 +3,11 @@ import React, { useState } from "react";
 const Orders = () => {
   // Dummy data
   const [data] = useState([
-    { batchId: "#001", quantity: 150, ripe: 80, unripe: 30, overripe: 20, damaged: 20, dominantGrade: "Grade I" },
-    { batchId: "#002", quantity: 200, ripe: 100, unripe: 50, overripe: 30, damaged: 20, dominantGrade: "Grade I" },
-    { batchId: "#003", quantity: 180, ripe: 90, unripe: 60, overripe: 20, damaged: 10, dominantGrade: "Grade I" },
-    { batchId: "#004", quantity: 120, ripe: 60, unripe: 30, overripe: 20, damaged: 10, dominantGrade: "Grade I" },
-    { batchId: "#005", quantity: 160, ripe: 70, unripe: 50, overripe: 30, damaged: 10, dominantGrade: "Grade I" },
+    { batchId: "#001", quantity: 150, ripe: 80, unripe: 30, overripe: 20, damaged: 20, density:240, size:60, dominantGrade: "Grade I" },
+    { batchId: "#002", quantity: 200, ripe: 100, unripe: 50, overripe: 30, damaged: 20, density:240, size:60, dominantGrade: "Grade I" },
+    { batchId: "#003", quantity: 180, ripe: 90, unripe: 60, overripe: 20, damaged: 10, density:240, size:60, dominantGrade: "Grade I" },
+    { batchId: "#004", quantity: 120, ripe: 60, unripe: 30, overripe: 20, damaged: 10, density:240, size:60, dominantGrade: "Grade I" },
+    { batchId: "#005", quantity: 160, ripe: 70, unripe: 50, overripe: 30, damaged: 10, density:240, size:60, dominantGrade: "Grade I" },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,6 +103,8 @@ const Orders = () => {
                         <th className="cell">Unripe</th>
                         <th className="cell">Overripe</th>
                         <th className="cell">Damaged</th>
+                        <th className="cell">Density</th>
+                        <th className="cell">Size</th>
                         <th className="cell">Dominant Grade</th>
                       </tr>
                     </thead>
@@ -115,6 +117,8 @@ const Orders = () => {
                           <td className="cell">{entry.unripe}</td>
                           <td className="cell">{entry.overripe}</td>
                           <td className="cell">{entry.damaged}</td>
+                          <td className="cell">{entry.density}</td>
+                          <td className="cell">{entry.size}</td>
                           <td className="cell">{entry.dominantGrade}</td>
                         </tr>
                       ))}
