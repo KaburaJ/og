@@ -1,101 +1,142 @@
 import React, { useEffect, useState } from "react";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js';
+import { ref, onValue } from "firebase/database";
+import { database } from "../../firebase"; // Adjust path as needed
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement, 
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+} from 'chart.js';
 import { Bar, Line } from "react-chartjs-2";
 
 // Register required Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,  // Ensure this is registered for point elements in Line charts
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement
+);
 
 
 const Dash = () => {
-     // State for line chart data
-    const [lineChartData, setLineChartData] = useState({
-        labels: [],  // Initially empty array for labels
-        datasets: [
-            {
-                label: 'Quantity of Coffee Berries',
-                data: [],  // Initially empty array for data
-                borderColor: '#008000',
-                backgroundColor: '#008000',
-                fill: true,
-            },
-        ],
-    });
+  const [lineChartData, setLineChartData] = useState({
+    labels: [],
+    datasets: [{ label: 'Quantity of Coffee Berries', data: [], borderColor: '#008000', backgroundColor: '#008000', fill: true }],
+  });
 
-    // State for bar chart data (4 classes)
-    const [barChartData, setBarChartData] = useState({
-        labels: ['Sorting 1', 'Sorting 2', 'Sorting 3', 'Sorting 4', 'Sorting 5'], // Sortings
-        datasets: [
-            {
-                label: 'Ripe',
-                data: [12, 19, 10, 15, 5],  // Initial values for Ripe
-                backgroundColor: '#008000',
-                borderColor: '#008000',
-                borderWidth: 1,
-            },
-            {
-                label: 'Unripe',
-                data: [5, 8, 12, 3, 9],  // Initial values for Unripe
-                backgroundColor: '#8B9F00',
-                borderColor: '#8B9F00',
-                borderWidth: 1,
-            },
-            {
-                label: 'Overripe',
-                data: [2, 3, 8, 5, 7],  // Initial values for Overripe
-                backgroundColor: '#FF5455',
-                borderColor: '#FF5455',
-                borderWidth: 1,
-            },
-            {
-                label: 'Damaged',
-                data: [1, 2, 1, 0, 3],  // Initial values for Damaged
-                backgroundColor: '#FF0000',
-                borderColor: '#FF0000',
-                borderWidth: 1,
-            },
-        ],
-    });
+  const [ripeCount, setRipeCount] = useState(0);
+  const [unripeCount, setUnripeCount] = useState(0);
+  const [overripeCount, setOverripeCount] = useState(0);
+  const [damagedCount, setDamagedCount] = useState(0);
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const [size, setSize] = useState(0)
+  const [density, setDensity] = useState(0)
 
-    useEffect(() => {
-        // Simulate continuous data for line chart
-        const interval = setInterval(() => {
-            setLineChartData(prevData => {
-                const newLabels = prevData.labels.length < 10 
-                    ? [...prevData.labels, `Day ${prevData.labels.length + 1}`] 
-                    : prevData.labels.slice(1).concat(`Day ${prevData.labels.length + 1}`);
 
-                const newData = prevData.datasets[0].data.length < 10 
-                    ? [...prevData.datasets[0].data, Math.floor(Math.random() * 100)] 
-                    : prevData.datasets[0].data.slice(1).concat(Math.floor(Math.random() * 100));
 
-                return {
-                    labels: newLabels,
-                    datasets: [{ ...prevData.datasets[0], data: newData }],
-                };
-            });
-        }, 3000); // Update every 3 seconds for line chart
+  useEffect(() => {
+    const fetchData = async () => {
+      const dataRef = ref(database, 'data/batch');
+      onValue(dataRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const ripe = Object.keys(data).reduce((acc, key) => data[key].label === "Ripe" ? acc + 1 : acc, 0);
+          const unripe = Object.keys(data).reduce((acc, key) => data[key].label === "Unripe" ? acc + 1 : acc, 0);
+          const overripe = Object.keys(data).reduce((acc, key) => data[key].label === "Overripe" ? acc + 1 : acc, 0);
+          const damaged = Object.keys(data).reduce((acc, key) => data[key].label === "Damaged" ? acc + 1 : acc, 0);
+          const x = Object.keys(data).reduce((acc, key) => data[key].x)
+          const y = Object.keys(data).reduce((acc, key) => data[key].y)
+          const width = Object.keys(data).reduce((acc, key) => data[key].width)
+          const height = Object.keys(data).reduce((acc, key) => data[key].height)
 
-        // Cleanup interval on unmount
-        return () => clearInterval(interval);
-    }, []);
+          setRipeCount(ripe);
+          setUnripeCount(unripe);
+          setOverripeCount(overripe);
+          setDamagedCount(damaged);
+          setX(x)
+          setY(y)
+          setWidth(width)
+          setHeight(height)
+          setSize((width * height))
+          function calculateDensity(width, mass) {
+            const radius = width / 2;  // width is the diameter
+        
+            const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);  // Volume of a sphere
+        
+            const density = mass / volume;
+        
+            return density;  }
+        
+            setDensity(calculateDensity(width, 100).toFixed(2))
+        
+        
+        }
+      });
+    };
+  
+    fetchData();
+  }, []);
+  
+  const [barChartData, setBarChartData] = useState({
+    labels: ['Sorting 1', 'Sorting 2', 'Sorting 3', 'Sorting 4', 'Sorting 5'],
+    datasets: [
+      { label: 'Ripe', data: [], backgroundColor: '#008000', borderColor: '#008000' },
+      { label: 'Unripe', data: [], backgroundColor: '#8B9F00', borderColor: '#8B9F00' },
+      { label: 'Overripe', data: [], backgroundColor: '#FF5455', borderColor: '#FF5455' },
+      { label: 'Damaged', data: [], backgroundColor: '#FF0000', borderColor: '#FF0000' },
+    ],
+  });
+  useEffect(() => {
+    const fetchData = async () => {
+      const dataRef = ref(database, 'data/batch');
+      onValue(dataRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const labels = Object.keys(data);
+          const ripe = labels.map((key) => data[key].label === "Ripe" ? 1 : 0);   // Adjust based on your data structure
+          const unripe = labels.map((key) => data[key].label === "Unripe" ? 1 : 0);
+          const overripe = labels.map((key) => data[key].label === "Overripe" ? 1 : 0);
+          const damaged = labels.map((key) => data[key].label === "Damaged" ? 1 : 0);
+          const width = labels.map((key) => data[key].width)
+          const x = labels.map((key) => data[key].x)
+          const y = labels.map((key) => data[key].y)
+          const height = labels.map((key) => data[key].height)
 
-    useEffect(() => {
-        // Update bar chart data every 5 minutes
-        const interval = setInterval(() => {
-            setBarChartData(prevData => {
-                return {
-                    ...prevData,
-                    datasets: prevData.datasets.map(dataset => ({
-                        ...dataset,
-                        data: dataset.data.map(() => Math.floor(Math.random() * 100)), // Simulate new data for each class
-                    })),
-                };
-            });
-        }, 300000); // Update every 5 minutes
 
-        // Cleanup interval on unmount
-        return () => clearInterval(interval);
-    }, []);
+          setLineChartData((prev) => ({
+            ...prev,
+            labels: labels, // Time or batches
+            datasets: [{ ...prev.datasets[0], data: labels.map(key => data[key].confidence * 100) }], // Assuming confidence as quantity
+          }));
+  
+          setBarChartData((prev) => ({
+            ...prev,
+            datasets: [
+              { ...prev.datasets[0], data: ripe },
+              { ...prev.datasets[1], data: unripe },
+              { ...prev.datasets[2], data: overripe },
+              { ...prev.datasets[3], data: damaged },
+            ],
+          }));
+        }
+      });
+    };
+  
+    fetchData();
+  }, []);  
+
 
     return (
         <div className="app-wrapper">
@@ -112,7 +153,7 @@ const Dash = () => {
                   {/* <div className="row gx-5 gy-3"> */}
                     <div className="col-12 col-lg-9">
                       <div>
-                        This Coffee Sorter Dashboard is designed to help visualize the output data from the Coffee Sorter hardware. 
+                        This Coffee Sorter Dashboard is designed to help visualize the output data from the Coffee Sorter hardware. Find the confidence rates of the different classes of coffee, the current berry size and density, and the various visualizations! 
                       </div>
                     </div>
                 </div>
@@ -126,7 +167,7 @@ const Dash = () => {
                 <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"green"}}>
                   <div className="app-card-body p-3 p-lg-4">
                     <h4 className="stats-type mb-1" style={{color:"white"}}>Ripe Berries</h4>
-                    <div className="stats-figure" style={{color:"white"}}>628</div>
+                    <div className="stats-figure" style={{color:"white"}}>{ripeCount}</div>
                   </div>
                   {/*//app-card-body*/}
                   <a className="app-card-link-mask" href="#" />
@@ -138,7 +179,7 @@ const Dash = () => {
                 <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"#8B9F00"}}>
                   <div className="app-card-body p-3 p-lg-4">
                     <h4 className="stats-type mb-1" style={{color:"white"}}>Unripe berries</h4>
-                    <div className="stats-figure" style={{color:"white"}}>250</div>
+                    <div className="stats-figure" style={{color:"white"}}>{unripeCount}</div>
                   </div>
                   {/*//app-card-body*/}
                   <a className="app-card-link-mask" href="#" />
@@ -150,7 +191,7 @@ const Dash = () => {
                 <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"#FF5455"}}>
                   <div className="app-card-body p-3 p-lg-4">
                     <h4 className="stats-type mb-1" style={{color:"white"}}>Overripe Berries</h4>
-                    <div className="stats-figure" style={{color:"white"}}>23</div>
+                    <div className="stats-figure" style={{color:"white"}}>{overripeCount}</div>
                   </div>
                   {/*//app-card-body*/}
                   <a className="app-card-link-mask" href="#" />
@@ -162,7 +203,7 @@ const Dash = () => {
                 <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"red"}}>
                   <div className="app-card-body p-3 p-lg-4">
                     <h4 className="stats-type mb-1" style={{color:"white"}}>Damaged berries</h4>
-                    <div className="stats-figure" style={{color:"white"}}>600</div>
+                    <div className="stats-figure" style={{color:"white"}}>{damagedCount}</div>
                   </div>
                   {/*//app-card-body*/}
                   <a className="app-card-link-mask" href="#" />
@@ -173,8 +214,8 @@ const Dash = () => {
               <div className="col-6 col-lg-3">
                 <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"#4A99D7"}}>
                   <div className="app-card-body p-3 p-lg-4">
-                    <h4 className="stats-type mb-1" style={{color:"white"}}>size</h4>
-                    <div className="stats-figure" style={{color:"white"}}>160</div>
+                    <h4 className="stats-type mb-1" style={{color:"white"}}>Current Berry Size (mm^2)</h4>
+                    <div className="stats-figure" style={{color:"white"}}>{size}</div>
                   </div>
                   {/*//app-card-body*/}
                   <a className="app-card-link-mask" href="#" />
@@ -184,8 +225,8 @@ const Dash = () => {
               <div className="col-6 col-lg-3">
                 <div className="app-card app-card-stat shadow-sm h-100" style={{backgroundColor:"#1C4B79"}}>
                   <div className="app-card-body p-3 p-lg-4">
-                    <h4 className="stats-type mb-1" style={{color:"white"}}>Density</h4>
-                    <div className="stats-figure" style={{color:"white"}}>230</div>
+                    <h4 className="stats-type mb-1" style={{color:"white"}}>Current Berry Density (g/cm^3) </h4>
+                    <div className="stats-figure" style={{color:"white"}}>{density} </div>
                   </div>
                   {/*//app-card-body*/}
                   <a className="app-card-link-mask" href="#" />

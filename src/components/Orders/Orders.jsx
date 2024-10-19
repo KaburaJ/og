@@ -1,29 +1,82 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { ref, onValue } from "firebase/database";
+import { database } from "../../firebase"; // Adjust path as needed
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js';
+import { Bar, Line } from "react-chartjs-2";
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement);
 
 const Orders = () => {
-  // Dummy data
-  const [data] = useState([
-    { batchId: "#001", quantity: 150, ripe: 80, unripe: 30, overripe: 20, damaged: 20, density:240, size:60, dominantGrade: "Grade I" },
-    { batchId: "#002", quantity: 200, ripe: 100, unripe: 50, overripe: 30, damaged: 20, density:240, size:60, dominantGrade: "Grade I" },
-    { batchId: "#003", quantity: 180, ripe: 90, unripe: 60, overripe: 20, damaged: 10, density:240, size:60, dominantGrade: "Grade I" },
-    { batchId: "#004", quantity: 120, ripe: 60, unripe: 30, overripe: 20, damaged: 10, density:240, size:60, dominantGrade: "Grade I" },
-    { batchId: "#005", quantity: 160, ripe: 70, unripe: 50, overripe: 30, damaged: 10, density:240, size:60, dominantGrade: "Grade I" },
-  ]);
-
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [ripeCount, setRipeCount] = useState(0);
+  const [unripeCount, setUnripeCount] = useState(0);
+  const [overripeCount, setOverripeCount] = useState(0);
+  const [damagedCount, setDamagedCount] = useState(0);
+  const [confidence, setConfidence] = useState(0)
+  const [lineChartData, setLineChartData] = useState({
+    labels: [],
+    datasets: [{ label: 'Quantity of Coffee Berries', data: [], borderColor: '#008000', backgroundColor: '#008000', fill: true }],
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const dataRef = ref(database, 'data/batch');
+      onValue(dataRef, (snapshot) => {
+        const dataSnapshot = snapshot.val();
+        if (dataSnapshot) {
+          const batchData = Object.keys(dataSnapshot).map((key) => {
+            const batch = dataSnapshot[key];
+            const size = batch.width * batch.height;
+
+            const ripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Ripe" ? acc + 1 : acc, 0);
+            const unripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Unripe" ? acc + 1 : acc, 0);
+            const overripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Overripe" ? acc + 1 : acc, 0);
+            const damaged = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Damaged" ? acc + 1 : acc, 0);
+            const confidence1 = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].confidence);
+
+            setConfidence(confidence1)
+            setRipeCount(ripe);
+            setUnripeCount(unripe);
+            setOverripeCount(overripe);
+            setDamagedCount(damaged);
+            function calculateDensity(width, mass) {
+              const radius = width / 2; 
+              const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
+              return mass / volume;
+            }
+
+            return {
+              batchId: key,
+              quantity: ((batch.label === "Ripe") + (batch.label === "Unripe") + (batch.label === "Overripe") + (batch.label === "Damaged")) || 0, 
+              ripe: batch.label === "Ripe" ? 1 : 0,
+              unripe: batch.label === "Unripe" ? 1 : 0,
+              overripe: batch.label === "Overripe" ? 1 : 0,
+              damaged: batch.label === "Damaged" ? 1 : 0,
+              density: calculateDensity(batch.width, 100).toFixed(2),  
+              size: size.toFixed(2),
+              dominantGrade: batch.label, 
+            };
+          });
+
+          setData(batchData.reverse());  
+        }
+      });
+    };
+    fetchData();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Add your search functionality here
     console.log("Searching for:", searchTerm);
   };
 
+  // Filter data by search term (Batch ID)
   const filteredData = data.filter((entry) => entry.batchId.includes(searchTerm));
 
   return (
     <>
-      {/*//app-header*/}
-      <div className="app-wrapper">
+      <div className="app-wrapper" style={{marginTop:"35px"}}>
         <div className="app-content pt-3 p-md-3 p-lg-4">
           <div className="container-xl">
             <div className="row g-3 mb-4 align-items-center justify-content-between">
@@ -47,9 +100,7 @@ const Orders = () => {
                           />
                         </div>
                         <div className="col-auto">
-                          <button type="submit" className="btn app-btn-secondary">
-                            Search
-                          </button>
+                          <button type="submit" className="btn app-btn-secondary">Search</button>
                         </div>
                       </form>
                     </div>
@@ -61,7 +112,7 @@ const Orders = () => {
                         <option value="option-4">Last 3 months</option>
                       </select>
                     </div>
-                    <div className="col-auto">
+                    {/* <div className="col-auto">
                       <a className="btn app-btn-secondary" href="#">
                         <svg
                           width="1em"
@@ -71,26 +122,16 @@ const Orders = () => {
                           fill="currentColor"
                           xmlns="http://www.w3.org/2000/svg"
                         >
-                          <path
-                            fillRule="evenodd"
-                            d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"
-                          />
-                          <path
-                            fillRule="evenodd"
-                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"
-                          />
+                          <path fillRule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                          <path fillRule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
                         </svg>
                         Download CSV
                       </a>
-                    </div>
+                    </div> */}
                   </div>
-                  {/*//row*/}
                 </div>
-                {/*//table-utilities*/}
               </div>
-              {/*//col-auto*/}
             </div>
-            {/*//row*/}
             <div className="app-card app-card-orders-table shadow-sm mb-5">
               <div className="app-card-body">
                 <div className="table-responsive">
@@ -106,6 +147,8 @@ const Orders = () => {
                         <th className="cell">Density</th>
                         <th className="cell">Size</th>
                         <th className="cell">Dominant Grade</th>
+                        <th className="cell">Confidence Rate</th>
+
                       </tr>
                     </thead>
                     <tbody>
@@ -120,58 +163,26 @@ const Orders = () => {
                           <td className="cell">{entry.density}</td>
                           <td className="cell">{entry.size}</td>
                           <td className="cell">{entry.dominantGrade}</td>
+                          <td className="cell">{(confidence*100).toFixed(2)} %</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                {/*//table-responsive*/}
               </div>
-              {/*//app-card-body*/}
             </div>
-            {/*//app-card*/}
             <nav className="app-pagination">
               <ul className="pagination justify-content-center">
-                <li className="page-item disabled">
-                  <a
-                    className="page-link"
-                    href="#"
-                    tabIndex={-1}
-                    aria-disabled="true"
-                  >
-                    Previous
-                  </a>
-                </li>
-                <li className="page-item active">
-                  <a className="page-link" href="#">
-                    1
-                  </a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#">
-                    2
-                  </a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#">
-                    3
-                  </a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#">
-                    Next
-                  </a>
-                </li>
+                <li className="page-item disabled"><a className="page-link" href="#">Previous</a></li>
+                <li className="page-item active"><a className="page-link" href="#">1</a></li>
+                <li className="page-item"><a className="page-link" href="#">2</a></li>
+                <li className="page-item"><a className="page-link" href="#">3</a></li>
+                <li className="page-item"><a className="page-link" href="#">Next</a></li>
               </ul>
             </nav>
-            {/*//app-pagination*/}
           </div>
-          {/*//container-fluid*/}
         </div>
       </div>
-      {/*//app-wrapper*/}
-      {/* Javascript */}
-      {/* Page Specific JS */}
     </>
   );
 };

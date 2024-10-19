@@ -1,77 +1,83 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { ref, onValue } from "firebase/database";
+import { database } from "../../firebase"; // Adjust path as needed
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement } from 'chart.js';
 import { Bar, Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
 
-// Register the required components with Chart.js
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+// Register required Chart.js components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement);
 
 const Charts = () => {
-  const [batchId, setBatchId] = useState("Batch 1");
-  const [data, setData] = useState(null);
-
-  const batchDataArray = [
-    {
-      batchId: "Batch 1",
-      quantity: 50,
-      ripe: 30,
-      unripe: 15,
-      overripe: 5,
-      damaged: 0,
-      dominantGrade: "A",
-    },
-    {
-      batchId: "Batch 2",
-      quantity: 40,
-      ripe: 20,
-      unripe: 15,
-      overripe: 3,
-      damaged: 2,
-      dominantGrade: "B",
-    },
-  ];
+  const [batchId, setBatchId] = useState(""); 
+  const [batchData, setBatchData] = useState(null); 
+  const [barChartData, setBarChartData] = useState({}); 
+  const [pieChartData, setPieChartData] = useState({}); 
 
   const handleBatchIdChange = (e) => {
     setBatchId(e.target.value);
   };
 
   const handleFetchData = () => {
-    const foundData = batchDataArray.find((batch) => batch.batchId === batchId);
-    if (foundData) {
-      setData(foundData);
-    } else {
-      alert("Batch ID not found!");
-      setData(null);
-    }
-  };
+      const sanitizedBatchId = batchId.trim();  
+      const invalidChars = /[.#$[\]]/;
+    
+      if (invalidChars.test(sanitizedBatchId)) {
+        alert("Invalid batch ID. Please remove any special characters.");
+        return;
+      }
+    
+      const dataRef = ref(database, `data/batch/${sanitizedBatchId}`);
+      onValue(dataRef, (snapshot) => {
+        const batch = snapshot.val();
+      if (batch) {
+        const size = batch.width * batch.height;
 
-  const barChartData = {
-    labels: ["Quantity"],
-    datasets: [
-      {
-        label: `Total Quantity of ${batchId}`,
-        data: data ? [data.quantity] : [],
-        backgroundColor: "#008000",
-      },
-    ],
-  };
+        function calculateDensity(width, mass) {
+          const radius = width / 2;  
+          const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);  
+          return mass / volume;
+        }
 
-  const pieChartData = {
-    labels: ["Ripe", "Unripe", "Overripe", "Damaged"],
-    datasets: [
-      {
-        label: `Fruit Quality for ${batchId}`,
-        data: data ? [data.ripe, data.unripe, data.overripe, data.damaged] : [],
-        backgroundColor: ["#008000", "#8B9F00", "#FF5455", "#FF0000"],
-      },
-    ],
+        const batchInfo = {
+          batchId: batchId,
+          quantity: ((batch.label === "Ripe") + (batch.label === "Unripe") + (batch.label === "Overripe") + (batch.label === "Damaged")) || 0,
+          ripe: batch.label === "Ripe" ? 1 : 0,
+          unripe: batch.label === "Unripe" ? 1 : 0,
+          overripe: batch.label === "Overripe" ? 1 : 0,
+          damaged: batch.label === "Damaged" ? 1 : 0,
+          density: calculateDensity(batch.width, 100).toFixed(2),  // Example mass
+          size: size.toFixed(2),
+          dominantGrade: batch.label,
+        };
+
+        setBatchData(batchInfo);
+
+        // Set data for the charts
+        setBarChartData({
+          labels: ["Total Quantity"],
+          datasets: [
+            {
+              label: "Quantity of Berries",
+              data: [batchInfo.quantity],
+              backgroundColor: ["#4caf50"],
+            },
+          ],
+        });
+
+        setPieChartData({
+          labels: ["Ripe", "Unripe", "Overripe", "Damaged"],
+          datasets: [
+            {
+              label: "Fruit Quality",
+              data: [batchInfo.ripe, batchInfo.unripe, batchInfo.overripe, batchInfo.damaged],
+              backgroundColor: ["#28a745", "#ffc107", "#ff5722", "#dc3545", "black"],
+            },
+          ],
+        });
+      } else {
+        alert("Batch not found");
+      }
+    });
   };
 
   return (
@@ -80,6 +86,7 @@ const Charts = () => {
         <div className="app-content pt-3 p-md-3 p-lg-4">
           <div className="container-xl">
             <h1 className="app-page-title">Charts</h1>
+
             <div className="mb-3">
               <input
                 type="text"
@@ -93,36 +100,38 @@ const Charts = () => {
               </button>
             </div>
 
-            <div className="row g-4 mb-4">
+            {batchData && (
+              <div className="row g-4 mb-4">
                 {/* Pie Chart for Fruit Quality */}
-              <div className="col-12 col-lg-6">
-                <div className="app-card app-card-chart h-100 shadow-sm">
-                  <div className="app-card-header p-3 border-0">
-                    <h4 className="app-card-title">Fruit Quality</h4>
-                  </div>
-                  <div className="app-card-body p-4">
-                    <div className="chart-container">
-                      <Pie data={pieChartData} />
+                <div className="col-12 col-lg-6">
+                  <div className="app-card app-card-chart h-100 shadow-sm">
+                    <div className="app-card-header p-3 border-0">
+                      <h4 className="app-card-title">Fruit Quality</h4>
+                    </div>
+                    <div className="app-card-body p-4">
+                      <div className="chart-container">
+                        <Pie data={pieChartData} />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              {/* Bar Chart for Quantity */}
-              <div className="col-12 col-lg-6">
-                <div className="app-card app-card-chart h-100 shadow-sm">
-                  <div className="app-card-header p-3 border-0">
-                    <h4 className="app-card-title">Total Quantity</h4>
-                  </div>
-                  <div className="app-card-body p-4">
-                    <div className="chart-container">
-                      <Bar data={barChartData} />
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              
-            </div>
+                {/* Bar Chart for Quantity */}
+                <div className="col-12 col-lg-6">
+                  <div className="app-card app-card-chart h-100 shadow-sm">
+                    <div className="app-card-header p-3 border-0">
+                      <h4 className="app-card-title">Total Quantity</h4>
+                    </div>
+                    <div className="app-card-body p-4">
+                      <div className="chart-container">
+                        <Bar data={barChartData} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
