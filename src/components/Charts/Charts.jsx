@@ -40,12 +40,13 @@ const Charts = () => {
 
         const batchInfo = {
           batchId: batchId,
-          quantity: ((batch.label === "Ripe") + (batch.label === "Unripe") + (batch.label === "Overripe") + (batch.label === "Damaged")) || 0,
+          quantity: ((batch.label === "Ripe") + (batch.label === "halfRipe") + (batch.label === "Unripe") + (batch.label === "OverRipe") + (batch.label === "Damaged")) || 0, 
           ripe: batch.label === "Ripe" ? 1 : 0,
+          halfripe: batch.label === "halfripe" ? 1 : 0,
           unripe: batch.label === "Unripe" ? 1 : 0,
-          overripe: batch.label === "Overripe" ? 1 : 0,
+          overripe: batch.label === "OverRipe" ? 1 : 0,
           damaged: batch.label === "Damaged" ? 1 : 0,
-          density: calculateDensity(batch.width, 100).toFixed(2),  // Example mass
+          density: calculateDensity(batch.width, 100).toFixed(2),  
           size: size.toFixed(2),
           dominantGrade: batch.label,
         };
@@ -65,11 +66,11 @@ const Charts = () => {
         });
 
         setPieChartData({
-          labels: ["Ripe", "Unripe", "Overripe", "Damaged"],
+          labels: ["Ripe", "Half Ripe", "Unripe", "Over Ripe", "Damaged"],
           datasets: [
             {
               label: "Fruit Quality",
-              data: [batchInfo.ripe, batchInfo.unripe, batchInfo.overripe, batchInfo.damaged],
+              data: [batchInfo.ripe, batchInfo.halfripe, batchInfo.unripe, batchInfo.overripe, batchInfo.damaged],
               backgroundColor: ["#28a745", "#ffc107", "#ff5722", "#dc3545", "black"],
             },
           ],

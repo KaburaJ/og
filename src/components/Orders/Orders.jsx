@@ -10,6 +10,7 @@ const Orders = () => {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [ripeCount, setRipeCount] = useState(0);
+  const [halfRipeCount, setHalfRipeCount] = useState(0)
   const [unripeCount, setUnripeCount] = useState(0);
   const [overripeCount, setOverripeCount] = useState(0);
   const [damagedCount, setDamagedCount] = useState(0);
@@ -30,13 +31,15 @@ const Orders = () => {
             const size = batch.width * batch.height;
 
             const ripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Ripe" ? acc + 1 : acc, 0);
+            const halfripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "halfripe" ? acc + 1 : acc, 0);
             const unripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Unripe" ? acc + 1 : acc, 0);
-            const overripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Overripe" ? acc + 1 : acc, 0);
+            const overripe = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "OverRipe" ? acc + 1 : acc, 0);
             const damaged = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].label === "Damaged" ? acc + 1 : acc, 0);
             const confidence1 = Object.keys(dataSnapshot).reduce((acc, key) => dataSnapshot[key].confidence);
 
             setConfidence(confidence1)
             setRipeCount(ripe);
+            setHalfRipeCount(halfripe)
             setUnripeCount(unripe);
             setOverripeCount(overripe);
             setDamagedCount(damaged);
@@ -48,10 +51,11 @@ const Orders = () => {
 
             return {
               batchId: key,
-              quantity: ((batch.label === "Ripe") + (batch.label === "Unripe") + (batch.label === "Overripe") + (batch.label === "Damaged")) || 0, 
+              quantity: ((batch.label === "Ripe") + (batch.label === "halfRipe") + (batch.label === "Unripe") + (batch.label === "OverRipe") + (batch.label === "Damaged")) || 0, 
               ripe: batch.label === "Ripe" ? 1 : 0,
+              halfripe: batch.label === "halfripe" ? 1 : 0,
               unripe: batch.label === "Unripe" ? 1 : 0,
-              overripe: batch.label === "Overripe" ? 1 : 0,
+              overripe: batch.label === "OverRipe" ? 1 : 0,
               damaged: batch.label === "Damaged" ? 1 : 0,
               density: calculateDensity(batch.width, 100).toFixed(2),  
               size: size.toFixed(2),
@@ -139,8 +143,9 @@ const Orders = () => {
                     <thead>
                       <tr>
                         <th className="cell">Batch ID</th>
-                        <th className="cell">Quantity of Berries</th>
+                        <th className="cell">Quantity</th>
                         <th className="cell">Ripe</th>
+                        <th className="cell">Half Ripe</th>
                         <th className="cell">Unripe</th>
                         <th className="cell">Overripe</th>
                         <th className="cell">Damaged</th>
@@ -157,6 +162,7 @@ const Orders = () => {
                           <td className="cell">{entry.batchId}</td>
                           <td className="cell">{entry.quantity}</td>
                           <td className="cell">{entry.ripe}</td>
+                          <td className="cell">{entry.halfripe}</td>
                           <td className="cell">{entry.unripe}</td>
                           <td className="cell">{entry.overripe}</td>
                           <td className="cell">{entry.damaged}</td>
