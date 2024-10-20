@@ -299,6 +299,68 @@ const Dash = () => {
             </div>
             {/*//col*/}
         </div>
+        {/* <div className="col-12 col-lg-6">
+                <div className="app-card app-card-stats-table h-100 shadow-sm">
+                  <div className="app-card-header p-3">
+                    <div className="row justify-content-between align-items-center">
+                      <div className="col-auto">
+                        <h4 className="app-card-title">Grading Data</h4>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app-card-body p-3 p-lg-4">
+                    <div className="table-responsive">
+                      <table className="table table-borderless mb-0">
+                        <thead>
+                          <tr>
+                            <th className="meta">Grade</th>
+                            <th className="meta stat-cell">Numbers</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>
+                              <a href="#">A</a>
+                            </td>
+                            <td className="stat-cell">110</td>
+
+                          </tr>
+                          <tr>
+                            <td>
+                              <a href="#">A</a>
+                            </td>
+                            <td className="stat-cell">110</td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <a href="#">A</a>
+                            </td>
+                            <td className="stat-cell">110</td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <a href="#">A</a>
+                            </td>
+                            <td className="stat-cell">110</td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <a href="#">A</a>
+                            </td>
+                            <td className="stat-cell">110</td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <a href="#">A</a>
+                            </td>
+                            <td className="stat-cell">110</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div> */}
            
           </div>
           {/*//container-fluid*/}
